@@ -1,8 +1,7 @@
 *~
 .*.swp
-CMakeLists.txt.user
-.finf
-InterfacesAndLibraries
 .DS_Store
+.finf
 .vscode
-
+CMakeLists.txt.user
+InterfacesAndLibraries
