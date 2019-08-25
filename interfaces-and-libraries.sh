@@ -266,9 +266,31 @@ function removeInterfacesAndLibraries()
     fi
 }
 
+function dowloadInterfacesAndLibraries()
+{
+    local url=$1
+    TMP_DIR=`mktemp -d`
+    if [ "$2" ]; then
+        INTERFACES_DIR=$2
+    else
+        INTERFACES_DIR="$TMP_DIR/interfaces"
+    fi
+    cd $TMP_DIR
+    curl -o MPW-GM.img.bin $url
+    macbinary decode MPW-GM.img.bin
+    hdiutil convert MPW-GM.img -format UDRO -o MPW-GM
+    hdiutil attach MPW-GM.dmg
+    cd -
+    mkdir -p $INTERFACES_DIR
+    cp -r /Volumes/MPW-GM/MPW-GM/Interfaces\&Libraries/* $INTERFACES_DIR/
+    hdiutil detach /Volumes/MPW-GM
+}
+
 function printUsageAndExit()
 {
     echo "Usage: $0 install /install/path /path/to/InterfacesAndLibraries"
+    echo "       $0 install /install/path https://example.com/MPW-GM.img.bin"
+    echo "       $0 download /dest/path https://example.com/MPW-GM.img.bin"
     echo "       $0 remove /install/path"
     exit 1
 }
@@ -278,6 +300,7 @@ if (return 0 2>/dev/null); then
     true
 else
     # We are being run directly
+    set -e
 
     if [ $# -lt 2 ]; then
         printUsageAndExit
@@ -294,9 +317,15 @@ else
 
     case "$CMD" in
         install)
+            if [[ $3 = http* ]]; then
+                dowloadInterfacesAndLibraries $3
+            fi
             locateAndCheckInterfacesAndLibraries
             removeInterfacesAndLibraries
             setUpInterfacesAndLibraries
+            ;;
+        download)
+            dowloadInterfacesAndLibraries $3 $2
             ;;
         remove)
             removeInterfacesAndLibraries
@@ -304,4 +333,6 @@ else
         *)
             printUsageAndExit
     esac
+
+    rm -rf $TMP_DIR
 fi
