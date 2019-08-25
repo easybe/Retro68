@@ -271,32 +271,63 @@ function removeInterfacesAndLibraries()
     fi
 }
 
+function dowloadInterfacesAndLibraries()
+{
+    cd $TMP_DIR
+    curl -o MPW-GM.img.bin $INTERFACES_URL
+    macbinary decode MPW-GM.img.bin
+    hdiutil convert MPW-GM.img -format UDRO -o MPW-GM
+    hdiutil attach MPW-GM.dmg
+    cd -
+    mkdir $INTERFACES_DIR
+    cp -r /Volumes/MPW-GM/MPW-GM/Interfaces\&Libraries/* $INTERFACES_DIR/
+    hdiutil detach /Volumes/MPW-GM
+}
+
 if (return 0 2>/dev/null); then
     # We are being sourced from build-toolchain.sh
     true
 else
     # We are being run directly
+    set -e
 
     if [ $# -lt 2 ]; then
-        echo "Usage: $0 /install/path /path/to/InterfacesAndLibraries"
+        echo "Usage: $0 /install/path https://example.com/MPW-GM.img.bin"
+        echo "       $0 /install/path /path/to/InterfacesAndLibraries"
         echo "       $0 /install/path --remove"
         exit 1
     fi
 
+    if [ "$2" = "--remove" ]; then
+        REMOVE=true
+    elif [[ $2 = http* ]]; then
+        DL_INTERFACES=true
+        TMP_DIR=`mktemp -d`
+        INTERFACES_DIR="$TMP_DIR/interfaces"
+        INTERFACES_URL="$2"
+    else
+        INTERFACES_DIR="$2"
+    fi
+
     PREFIX="$1"
-    INTERFACES_DIR="$2"
     BUILD_68K=${3:-true}
     BUILD_PPC=${4:-true}
     BUILD_CARBON=${5:-true}
     SRC=$(cd `dirname $0` && pwd -P)
     export PATH="$PREFIX/bin:$PATH"
 
-    if [ "${INTERFACES_DIR}" = "--remove" ]; then
+    if [ "$REMOVE" ]; then
         removeInterfacesAndLibraries
     else
+        if [ "$DL_INTERFACES" ]; then
+            dowloadInterfacesAndLibraries
+        fi
         locateAndCheckInterfacesAndLibraries
         removeInterfacesAndLibraries
         setupPEFBinaryFormat
         setUpInterfacesAndLibraries
+        if [ "$DL_INTERFACES" ]; then
+            rm -rf $TMP_DIR
+        fi
     fi
 fi
