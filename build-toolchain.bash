@@ -337,6 +337,12 @@ export PATH=$PREFIX/bin:$PATH
 
 setUpInterfacesAndLibraries
 
+SCRIPT_DST=$PREFIX/libexec/retro68
+mkdir -p $SCRIPT_DST
+cp interfaces-and-libraries.sh $SCRIPT_DST/
+cp prepare-headers.sh $SCRIPT_DST/
+cp prepare-rincludes.sh $SCRIPT_DST/
+
 ##################### Build target libraries and samples
 
 if [ $BUILD_68K != false ]; then
