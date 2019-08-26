@@ -1,3 +1,5 @@
+#!/bin/sh
+
 IN="$1"
 OUT="$2"
 
@@ -8,4 +10,3 @@ export LC_ALL=C
 for file in $(cd "$IN"; ls [A-Z]*.r); do
     tr '\r' '\n' < $IN/$file > $OUT/$file
 done
-
