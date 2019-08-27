@@ -266,6 +266,13 @@ function removeInterfacesAndLibraries()
     fi
 }
 
+function printUsageAndExit()
+{
+    echo "Usage: $0 install /install/path /path/to/InterfacesAndLibraries"
+    echo "       $0 remove /install/path"
+    exit 1
+}
+
 if (return 0 2>/dev/null); then
     # We are being sourced from build-toolchain.sh
     true
@@ -273,24 +280,28 @@ else
     # We are being run directly
 
     if [ $# -lt 2 ]; then
-        echo "Usage: $0 /install/path /path/to/InterfacesAndLibraries"
-        echo "       $0 /install/path --remove"
-        exit 1
+        printUsageAndExit
     fi
 
-    PREFIX="$1"
-    INTERFACES_DIR="$2"
-    BUILD_68K=${3:-true}
-    BUILD_PPC=${4:-true}
-    BUILD_CARBON=${5:-true}
+    CMD=$1
+    PREFIX="$2"
+    INTERFACES_DIR="$3"
+    BUILD_68K=${4:-true}
+    BUILD_PPC=${5:-true}
+    BUILD_CARBON=${6:-true}
     SRC=$(cd `dirname $0` && pwd -P)
     export PATH="$PREFIX/bin:$PATH"
 
-    if [ "${INTERFACES_DIR}" = "--remove" ]; then
-        removeInterfacesAndLibraries
-    else
-        locateAndCheckInterfacesAndLibraries
-        removeInterfacesAndLibraries
-        setUpInterfacesAndLibraries
-    fi
+    case "$CMD" in
+        install)
+            locateAndCheckInterfacesAndLibraries
+            removeInterfacesAndLibraries
+            setUpInterfacesAndLibraries
+            ;;
+        remove)
+            removeInterfacesAndLibraries
+            ;;
+        *)
+            printUsageAndExit
+    esac
 fi
